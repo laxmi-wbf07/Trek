@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bhutan Trekking Guide</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f0f2f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        header {
+            background: linear-gradient(135deg, #006400, #008000);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            font-size: 28px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        main {
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .form-container, .results-container {
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            margin-bottom: 30px;
+        }
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: 600;
+            color: #444;
+            margin-bottom: 8px;
+            display: block;
+        }
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e1e1;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+        select:focus, input:focus {
+            outline: none;
+            border-color: #006400;
+        }
+        button {
+            background: #006400;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s ease, background 0.3s ease;
+            width: 100%;
+        }
+        button:hover {
+            background: #008000;
+            transform: translateY(-1px);
+        }
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            padding: 20px 0;
+        }
+        .route-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+            border: 1px solid #e1e1e1;
+        }
+        .route-card:hover {
+            transform: translateY(-5px);
+        }
+        .route-image {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            background-position: center;
+        }
+        .route-content {
+            padding: 20px;
+        }
+        .route-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .route-title {
+            margin: 0;
+            color: #2c3e50;
+            font-size: 1.5em;
+        }
+        .difficulty-tag {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .easy { 
+            background: #dff0d8;
+            color: #3c763d;
+        }
+        .moderate { 
+            background: #fcf8e3;
+            color: #8a6d3b;
+        }
+        .hard { 
+            background: #f2dede;
+            color: #a94442;
+        }
+        .trek-details {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+        }
+        .trek-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .stat-item {
+            font-size: 0.9em;
+        }
+        .stat-label {
+            font-weight: 600;
+            color: #666;
+        }
+        .alternatives {
+            margin-top: 20px;
+            padding: 15px;
+            background: #e8f5e9;
+            border-radius: 8px;
+            border-left: 4px solid #006400;
+        }
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>Bhutan Trekking Guide</header>
+    <main>
+        <div class="form-container">
+            <h2>Plan Your Trek</h2>
+            <div class="form-grid">
+                <div>
+                    <label for="difficulty">Difficulty Level:</label>
+                    <select id="difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="moderate">Moderate</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="duration">Duration (days):</label>
+                    <input type="number" id="duration" min="1" max="14" value="5" placeholder="Enter number of days">
+                </div>
+            </div>
+            <button onclick="getTrekkingRoutes()">Find Perfect Trek</button>
+        </div>
+        <div class="results-container" id="results" style="display: none;">
+            <h2>Recommended Treks</h2>
+            <div id="route-list"></div>
+        </div>
+    </main>
+
+    <script>
+        const UNSPLASH_ACCESS_KEY = 'XBlkccuaSGgL8k-xNpYnjFC5GhCGtzPTHbN6aokrNt0';
+        
+        const trekkingRoutes = [
+            {
+                name: "Jomolhari Trek",
+                difficulty: "hard",
+                duration: 8,
+                description: "A challenging high-altitude trek offering stunning views of Mount Jomolhari. Perfect for experienced trekkers seeking adventure in the Himalayas.",
+                elevation: "4,900m",
+                bestSeason: "March-May, September-November",
+                searchTerms: [
+                    "Mount Jomolhari Bhutan",
+                    "Jomolhari Base Camp",
+                    "Jomolhari Trek Bhutan",
+                    "Chomolhari Mountain Bhutan",
+                    "Bhutan Himalayas Jomolhari"
+                ],
+                verifiedImages: [
+                    "photo-1540804485132-9c43a5f22944",
+                    "photo-1542611566-485b2b5ee220",
+                    "photo-1533447307361-e5838082b600"
+                ]
+            },
+            {
+                name: "Druk Path Trek",
+                difficulty: "moderate",
+                duration: 6,
+                description: "A scenic trek connecting Paro and Thimphu, featuring ancient monasteries and high-altitude lakes.",
+                elevation: "4,200m",
+                bestSeason: "March-May, September-November",
+                searchTerms: [
+                    "Druk Path Trek Bhutan",
+                    "Paro Thimphu Trek",
+                    "Bhutan Monastery Trek",
+                    "Jimiling Pass Bhutan",
+                    "Phajoding Monastery Bhutan"
+                ],
+                verifiedImages: [
+                    "photo-1533447307361-e5838082b600",
+                    "photo-1542611566-485b2b5ee220",
+                    "photo-1540804485132-9c43a5f22944"
+                ]
+            },
+            {
+                name: "Bumthang Owl Trek",
+                difficulty: "easy",
+                duration: 3,
+                description: "A short, cultural trek through pine forests and traditional villages in the spiritual heartland of Bhutan.",
+                elevation: "3,000m",
+                bestSeason: "Year-round",
+                searchTerms: [
+                    "Bumthang Valley Bhutan",
+                    "Bumthang Cultural Trek",
+                    "Bumthang Forest Bhutan",
+                    "Bhutan Pine Forest Trek",
+                    "Bumthang Traditional Village"
+                ],
+                verifiedImages: [
+                    "photo-1533447307361-e5838082b600",
+                    "photo-1542611566-485b2b5ee220",
+                    "photo-1540804485132-9c43a5f22944"
+                ]
+            },
+            {
+                name: "Dagala Thousand Lakes Trek",
+                difficulty: "moderate",
+                duration: 6,
+                description: "A beautiful trek through multiple high-altitude lakes with opportunities for trout fishing.",
+                elevation: "4,520m",
+                bestSeason: "April-June, September-October",
+                searchTerms: [
+                    "Dagala Thousand Lakes Bhutan",
+                    "Dagala Trek Bhutan",
+                    "Bhutan Alpine Lakes",
+                    "Dagala Range Bhutan",
+                    "Labatama Valley Bhutan"
+                ],
+                verifiedImages: [
+                    "photo-1533447307361-e5838082b600",
+                    "photo-1542611566-485b2b5ee220",
+                    "photo-1540804485132-9c43a5f22944"
+                ]
+            },
+            {
+                name: "Gangtey Trek",
+                difficulty: "easy",
+                duration: 3,
+                description: "A gentle trek through the Phobjikha Valley, famous for black-necked cranes and potato farms.",
+                elevation: "3,000m",
+                bestSeason: "March-May, September-December",
+                searchTerms: [
+                    "Phobjikha Valley Bhutan",
+                    "Gangtey Valley Trek",
+                    "Black Necked Crane Bhutan",
+                    "Gangtey Monastery Trek",
+                    "Phobjikha Landscape Bhutan"
+                ],
+                verifiedImages: [
+                    "photo-1533447307361-e5838082b600",
+                    "photo-1542611566-485b2b5ee220",
+                    "photo-1540804485132-9c43a5f22944"
+                ]
+            }
+        ];
+
+        async function fetchUnsplashImage(route) {
+            for (const searchTerm of route.searchTerms) {
+                try {
+                    const response = await fetch(
+                        `https://api.unsplash.com/photos/random?query=${encodeURIComponent(searchTerm)}&orientation=landscape`,
+                        {
+                            headers: {
+                                'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`
+                            }
+                        }
+                    );
+                    const data = await response.json();
+                    if (data.tags?.some(tag => 
+                        tag.title.toLowerCase().includes('bhutan') || 
+                        tag.title.toLowerCase().includes('himalaya'))) {
+                        return data.urls.regular;
+                    }
+                } catch (error) {
+                    continue;
+                }
+            }
+
+            for (const photoId of route.verifiedImages) {
+                try {
+                    const response = await fetch(
+                        `https://api.unsplash.com/photos/${photoId}`,
+                        {
+                            headers: {
+                                'Authorization': `Client-ID ${UNSPLASH_ACCESS_KEY}`
+                            }
+                        }
+                    );
+                    const data = await response.json();
+                    return data.urls.regular;
+                } catch (error) {
+                    continue;
+                }
+            }
+
+            return '/api/placeholder/800/600';
+        }
+
+        function createRouteCard(route, isExactMatch) {
+            const difficultyClasses = {
+                'easy': 'easy',
+                'moderate': 'moderate',
+                'hard': 'hard'
+            };
+
+            return `
+                <div class="route-card">
+                    <img 
+                        src="${route.imageUrl}" 
+                        alt="${route.name}" 
+                        class="route-image"
+                    >
+                    <div class="route-content">
+                        <div class="route-header">
+                            <h3 class="route-title">${route.name}</h3>
+                            <span class="difficulty-tag ${difficultyClasses[route.difficulty]}">
+                                ${route.difficulty}
+                            </span>
+                        </div>
+                        <p>${route.description}</p>
+                        <div class="trek-details">
+                            <div class="trek-stats">
+                                <div class="stat-item">
+                                    <span class="stat-label">Duration:</span> 
+                                    ${route.duration} days
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Max Elevation:</span> 
+                                    ${route.elevation}
+                                </div>
+                                <div class="stat-item">
+                                    <span class="stat-label">Best Season:</span> 
+                                    ${route.bestSeason}
+                                </div>
+                            </div>
+                            ${isExactMatch ? '' : `
+                                <div class="alternatives">
+                                    <strong>Note:</strong> This trek is an alternative suggestion based on your criteria.
+                                </div>
+                            `}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function getTrekkingRoutes() {
+            const difficulty = document.getElementById('difficulty').value;
+            const duration = parseInt(document.getElementById('duration').value, 10);
+            
+            if (!duration || duration < 1) {
+                alert("Please enter a valid duration (minimum 1 day)");
+                return;
+            }
+
+            const exactMatches = trekkingRoutes.filter(route => 
+                route.difficulty === difficulty && route.duration <= duration
+            );
+
+            const alternatives = trekkingRoutes.filter(route => 
+                (route.difficulty === difficulty && route.duration > duration) ||
+                (route.difficulty !== difficulty && route.duration <= duration)
+            );
+
+            const resultsDiv = document.getElementById('results');
+            const routeList = document.getElementById('route-list');
+            
+            resultsDiv.style.display = "block";
+            routeList.innerHTML = '<div class="loading">Loading trek information...</div>';
+
+            try {
+                let html = '<div class="results-grid">';
+
+                if (exactMatches.length === 0 && alternatives.length === 0) {
+                    html = `
+                        <div class="no-results">
+                            <h3>No matches found</h3>
+                            <p>Try adjusting your criteria for more options.</p>
+                        </div>
+                    `;
+                } else {
+                    {
+                        const exactMatchesWithImages = await Promise.all(
+                            exactMatches.map(async (route) => {
+                                route.imageUrl = await fetchUnsplashImage(route);
+                                return route;
+                            })
+                        );
+                        html += exactMatchesWithImages.map(route => createRouteCard(route, true)).join('');
+                    }
+                    
+                    if (alternatives.length > 0) {
+                        if (exactMatches.length > 0) {
+                            html += '</div><h3>Alternative Options</h3><div class="results-grid">';
+                        }
+                        const alternativesWithImages = await Promise.all(
+                            alternatives.map(async (route) => {
+                                route.imageUrl = await fetchUnsplashImage(route);
+                                return route;
+                            })
+                        );
+                        html += alternativesWithImages.map(route => createRouteCard(route, false)).join('');
+                    }
+                }
+
+                html += '</div>';
+                routeList.innerHTML = html;
+            } catch (error) {
+                routeList.innerHTML = '<div class="no-results">Error loading trek information. Please try again.</div>';
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
